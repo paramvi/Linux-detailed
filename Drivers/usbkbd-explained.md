@@ -39,9 +39,12 @@ Here the loop is from 2 to 8. Why's that?
        A: special keys have reserved 0th place. 1st place is not known for?
        
     How does the loop work?
-   A: First IF condition 
-      a) old[i] > 3, ... this avoids the scancodes which have values less than 3 ( But then what is values 1-3 for in the new[2] ?).
-      b) memscan condition: check the 'new' string from the 2nd place to the end of it for the character 'old[i]'. For not present, 
+   
+    First IF condition 
+
+    a) old[i] > 3, ... this avoids the scancodes which have values less than 3 ( But then what is values 1-3 for in the new[2] ?).
+
+    b) memscan condition: check the 'new' string from the 2nd place to the end of it for the character 'old[i]'. For not present, 
          (returns the address of the next byte of the 'new' which is 'new+8')
          
      If condition 'a' and 'b' is true, it means 'old[i]' key has been released.     
@@ -59,5 +62,6 @@ Here the loop is from 2 to 8. Why's that?
 
 Some unanswered questions...
 1. Why's there input data in new[0] and new[2]. I mean if this is it, then why do we need the other 6 bits for?
+
 2. When I set the packet size to < 8, status code returned is 75, -EOVERFLOW.
    When I set the packet size to > 8 (100), status code returned is 75, -EOVERFLOW. Why?
