@@ -27,13 +27,13 @@ which is *L-Ctrl* and usb_kbd_keycode[224+1] is '42', which is *L-shift*.
 
     Example:
     
-    Usually when you press say `Shift_L + a` which is Capital `a`, what happens is the 'new' string is like as follows:	
+    Usually when you press say `Shift_L + a` which is `A`, what happens is the 'new' string is like as follows:	
     
     `new: 2 0 4 0 0 0 0`
 
     In the first loop
    for i = 1, `new[0]>>1 & 1 == true`, 
-    so input_report_key reports usb_kbd_keycode[224+1] to the kernel, which is     'shift'. 
+    so input_report_key reports usb_kbd_keycode[224+1] to the kernel, which is 'shift'. 
     
     'new[2]' is handled in the next loop.
    
@@ -65,7 +65,9 @@ Here the loop is from 2 to 8. Why's that?
      
 
 Some unanswered questions...
+
 1. Why's there input data in new[0] and new[2]. I mean if this is it, then why do we need the other 6 bits for?
 
 2. When I set the packet size to < 8, status code returned is 75, -EOVERFLOW.
+
    When I set the packet size to > 8 (100), status code returned is 75, -EOVERFLOW. Why?
