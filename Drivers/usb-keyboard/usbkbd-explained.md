@@ -46,7 +46,7 @@ Here the loop is from 2 to 8. Why's that?
    
     First IF condition 
 
-    * old[i] > 3, ... this avoids the scancodes which have values less than 3 ( But then what is values 1-3 for in the new[2] ?).
+    * old[i] > 3, this avoids the scancodes which have values less than 3 ( But then what is values 1-3 for in the new[2] ?).
 
     * memscan condition: check the 'new' string from the 2nd place to the end of it for the character 'old[i]'. For not present, 
          (returns the address of the next byte of the 'new' which is 'new+8')
