@@ -63,13 +63,19 @@ static const unsigned char usb_kbd_keycode[256] = {
 };
 
 struct usb_kbd {
+// this is the structure of the keyboard device
 	struct input_dev *dev;
+	// this is the structure of the general input device
+	// this is used for devices like mouse and other input devices
 	struct usb_device *usbdev;
 	unsigned char old[8];
 	struct urb *irq, *led;
+	// this is usb request block... it is used to send or receive data to or from a specific USB endpoint on a specific USB device
 	unsigned char newleds;
 	char name[128];
+	// for the name of the keyboard
 	char phys[64];
+	// for saving the physical path of the keyboard in systree
 
 	unsigned char *new;
 	struct usb_ctrlrequest *cr;
@@ -77,10 +83,14 @@ struct usb_kbd {
 	dma_addr_t cr_dma;
 	dma_addr_t new_dma;
 	dma_addr_t leds_dma;
+	// Direct memory access (DMA) is a feature of computer systems that allows certain hardware subsystems to access main system memory 
+	// (RAM) independently of the central processing unit (CPU).
 };
 
 static void usb_kbd_irq(struct urb *urb)
 {
+// this method is the brains. It is explained in the usb_kbd_irq-explained file
+// that file is in the same directory as this files.
 	struct usb_kbd *kbd = urb->context;
 	int i;
 	switch (urb->status) {
@@ -148,9 +158,12 @@ resubmit:
 static int usb_kbd_event(struct input_dev *dev, unsigned int type,
 			 unsigned int code, int value)
 {
+// this method is for the turning on/off various key lights on the keyboards. 
+// For example, num lock Light, Caps Lock Light and many others
 	struct usb_kbd *kbd = input_get_drvdata(dev);
 
-	if (type != EV_LED)
+	if (type != EV_LED) // if the type of the event is not of the EV_LED, then return 
+	                    // this event is used to turn LEDs on devices on and off.
 		return -1;
 
 	kbd->newleds = (!!test_bit(LED_KANA,    dev->led) << 3) | (!!test_bit(LED_COMPOSE, dev->led) << 3) |
@@ -207,6 +220,7 @@ static void usb_kbd_close(struct input_dev *dev)
 
 static int usb_kbd_alloc_mem(struct usb_device *dev, struct usb_kbd *kbd)
 {
+// allocating the memory to various fields our Keyboard struct
 	if (!(kbd->irq = usb_alloc_urb(0, GFP_KERNEL)))
 		return -1;
 	if (!(kbd->led = usb_alloc_urb(0, GFP_KERNEL)))
@@ -233,14 +247,14 @@ static void usb_kbd_free_mem(struct usb_device *dev, struct usb_kbd *kbd)
 static int usb_kbd_probe(struct usb_interface *iface,
 			 const struct usb_device_id *id)
 {
-
+ // this is the function called after the _init is successfull
 	struct usb_device *dev = interface_to_usbdev(iface);
 	struct usb_host_interface *interface;
 	struct usb_endpoint_descriptor *endpoint;
 	struct usb_kbd *kbd;
 	struct input_dev *input_dev;
 	int i, pipe, maxp;
-	int error = -ENOMEM;
+	int error = -ENOMEM; // not enough memory
 
 	interface = iface->cur_altsetting;
 
@@ -255,6 +269,7 @@ static int usb_kbd_probe(struct usb_interface *iface,
 	maxp = usb_maxpacket(dev, pipe, usb_pipeout(pipe));
 
 	kbd = kzalloc(sizeof(struct usb_kbd), GFP_KERNEL);
+	// memory initialised with zero
 	input_dev = input_allocate_device();
 	if (!kbd || !input_dev)
 		goto fail1;
@@ -290,6 +305,11 @@ static int usb_kbd_probe(struct usb_interface *iface,
 
 	input_set_drvdata(input_dev, kbd);
 
+// following is the list of the events our device  will generate 
+// EV_KEY used to describe the state changes of keyboard (key presses).
+// EV_LED querying or setting the various leds on the device
+// EV_REP events are used for specifying autorepeating events. When a key is pressed for some time, it should repeat
+
 	input_dev->evbit[0] = BIT_MASK(EV_KEY) | BIT_MASK(EV_LED) |
 		BIT_MASK(EV_REP);
 	input_dev->ledbit[0] = BIT_MASK(LED_NUML) | BIT_MASK(LED_CAPSL) |
@@ -303,6 +323,10 @@ static int usb_kbd_probe(struct usb_interface *iface,
 	input_dev->event = usb_kbd_event;
 	input_dev->open = usb_kbd_open;
 	input_dev->close = usb_kbd_close;
+	
+// following function initializes a interrupt urb with the proper information needed to submit it to a device.
+// 	Note it involves the usb_kbd_irq to handle the urb request
+
 	usb_fill_int_urb(kbd->irq, dev, pipe,
 			 kbd->new, (maxp > 8 ? 8 : maxp),
 			 usb_kbd_irq, kbd, endpoint->bInterval);
@@ -312,10 +336,11 @@ static int usb_kbd_probe(struct usb_interface *iface,
 
 	kbd->cr->bRequestType = USB_TYPE_CLASS | USB_RECIP_INTERFACE;
 	kbd->cr->bRequest = 0x09;
-	kbd->cr->wValue = cpu_to_le16(0x200);
+	kbd->cr->wValue = cpu_to_le16(0x200); //  converting the value from native cpu to little endian
 	kbd->cr->wIndex = cpu_to_le16(interface->desc.bInterfaceNumber);
 	kbd->cr->wLength = cpu_to_le16(1);
-
+	
+// following is the control interupt urb
 	usb_fill_control_urb(kbd->led, dev, usb_sndctrlpipe(dev, 0),
 			     (void *) kbd->cr, kbd->leds, 1,
 			     usb_kbd_led, kbd);
@@ -357,8 +382,10 @@ static struct usb_device_id usb_kbd_id_table [] = {
 	{ }						/* Terminating entry */
 };
 
+// this table is used for listing the devices this driver supports
 MODULE_DEVICE_TABLE (usb, usb_kbd_id_table);
 
+// this is the structure of the driver, probe, disconnect, id_table and name entries are must for this struct
 static struct usb_driver usb_kbd_driver = {
 	.name =		"usbkbd",
 	.probe =	usb_kbd_probe,
@@ -368,6 +395,7 @@ static struct usb_driver usb_kbd_driver = {
 
 static int __init usb_kbd_init(void)
 {
+// registering this driver with the usb_core 
 	int result = usb_register(&usb_kbd_driver);
 	if (result == 0)
 		printk(KERN_INFO KBUILD_MODNAME ": " DRIVER_VERSION ":"
@@ -377,8 +405,11 @@ static int __init usb_kbd_init(void)
 
 static void __exit usb_kbd_exit(void)
 {
+// deregistering the driver from the usb_core
 	usb_deregister(&usb_kbd_driver);
 }
 
+// these functions are called on loading the driver with "modprobe <driver-name>" and removing using "modprobe -r <driver-name>" 
+// respectively
 module_init(usb_kbd_init);
 module_exit(usb_kbd_exit);
