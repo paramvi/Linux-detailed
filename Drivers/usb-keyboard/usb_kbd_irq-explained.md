@@ -6,17 +6,17 @@ In the first loop, special keys: both Shift, Alt, Ctrl are handled. The way they
 
 1. When these keys are pressed new[0] gets the data, instead of usual new[2].        There scancodes are listed below.
 
-    * L-shift --> \x2
+    * L-shift --> 0x2
    
-    * L-Ctrl ---> \x1
+    * L-Ctrl ---> 0x1
    
-   * L-Alt ----> \x4
+   * L-Alt ----> 0x4
    
-   * R-Alt ----> \x40
+   * R-Alt ----> 0x40
    
-   * R-Ctrl ---> \x10
+   * R-Ctrl ---> 0x10
    
-   * R-shift --> \x20
+   * R-shift --> 0x20
    
     Now the loop handles the special keys by right shifting the new[0] appropriately.
 
