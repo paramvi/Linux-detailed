@@ -104,7 +104,11 @@ static void usb_kbd_irq(struct urb *urb)
 	default:		/* error */
 		goto resubmit;	
 	}
+	// comment the following for loop to disable the CONTROL, SHIFT, ALT, and other 
+.	// special keys. Explaination in the usb_kbd_irq-explained.md file.
 	for (i = 0; i < 8; i++){
+		// third argument of the input_report_key is state of the key
+		// 0 means released, and 1 means pressed.
 		input_report_key(kbd->dev, usb_kbd_keycode[i + 224], (kbd->new[0] >> i) & 1);
 	}
 	
@@ -125,6 +129,8 @@ static void usb_kbd_irq(struct urb *urb)
 		if (kbd->old[i] > 3 && memscan(kbd->new + 2, kbd->old[i], 6) == kbd->new + 8) {
 		
 			if (usb_kbd_keycode[kbd->old[i]])
+				// third argument of the input_report_key is state of the key
+				// 0 means released, and 1 means pressed.
 				input_report_key(kbd->dev, usb_kbd_keycode[kbd->old[i]], 0);
 			
 			else
@@ -135,6 +141,8 @@ static void usb_kbd_irq(struct urb *urb)
 		if (kbd->new[i] > 3 && memscan(kbd->old + 2, kbd->new[i], 6) == kbd->old + 8) {
 		
 			if (usb_kbd_keycode[kbd->new[i]])
+				// third argument of the input_report_key is state of the key
+				// 0 means released, and 1 means pressed.
 				input_report_key(kbd->dev, usb_kbd_keycode[kbd->new[i]], 1);
 
 			else
